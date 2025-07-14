@@ -1,0 +1,27 @@
+[DEFAULT]
+chk_signal_delay = False
+ps_signal_delay = 0
+chk_use_fine = False
+chk_error_signal = False
+chk_auto_rott = False
+ps_offs_angle = 0.0
+chk_set_zero = False
+chk_arm_enable = False
+enbl_remap_m6 = True
+ps_metric_mode = False
+ps_searchvel = 3048.0
+ps_probevel = 101.6
+ps_z_clearance = 40.132
+ps_probe_max = 25.4
+ps_probe_latch = 19.9898
+ps_probe_diam = 25.4
+ps_xy_clearance = 25.4
+ps_edge_length = 60.959999999999994
+ps_offs_x = 0.0
+ps_offs_y = 0.0
+ps_offs_z = 0.0
+ps_arm_delta_x = 0.0
+ps_arm_delta_y = 0.0
+setterheight = -233.8623787879944
+blockheight = 0.0
+

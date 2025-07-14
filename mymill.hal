@@ -297,7 +297,7 @@ net estop-out     =>  iocontrol.0.emc-enable-in
 
 net tool-change-request    <= iocontrol.0.tool-change
 net tool-change-confirmed  => iocontrol.0.tool-changed
-net tool-number            <= iocontrol.0.tool-prep-number
+#net tool-number            <= iocontrol.0.tool-prep-number
 
 #  ---signals to show tool offset in the GUI---
 
@@ -305,5 +305,5 @@ net tooloffset-x  <=  motion.tooloffset.x
 net tooloffset-z  <=  motion.tooloffset.z
 
 #  ---ignore tool prepare requests---
-net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
+#net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
 
