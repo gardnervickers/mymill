@@ -1,0 +1,4 @@
+windows:
+  mainwindow:
+    kwargs:
+      confirm_exit: false

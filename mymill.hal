@@ -293,17 +293,40 @@ net machine-is-enabled        <=  motion.motion-enabled
 net estop-out     <=  iocontrol.0.user-enable-out
 net estop-out     =>  iocontrol.0.emc-enable-in
 
-#  ---manual tool change signals---
-
-net tool-change-request    <= iocontrol.0.tool-change
-net tool-change-confirmed  => iocontrol.0.tool-changed
-#net tool-number            <= iocontrol.0.tool-prep-number
-
 #  ---signals to show tool offset in the GUI---
 
 net tooloffset-x  <=  motion.tooloffset.x
 net tooloffset-z  <=  motion.tooloffset.z
 
 #  ---ignore tool prepare requests---
-#net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
+net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
 
+
+
+net machine-is-enabled  =>     hm2_7i76e.0.7i76.0.0.output-01 hm2_7i76e.0.7i76.0.0.output-00
+
+# Sensors
+# 28 - x home
+# 29 - y home
+# 30 - z home
+# 31 - aux1
+# 32 - aux2
+# 33 - aux3
+
+# HLFB
+net y-hlfb-status hm2_7i76e.0.7i76.0.0.input-24
+net a-hlfb-status hm2_7i76e.0.7i76.0.0.input-25
+net z-hlfb-status hm2_7i76e.0.7i76.0.0.input-26
+net x-hlfb-status hm2_7i76e.0.7i76.0.0.input-27
+
+loadrt and2 count=2
+loadrt not count=1
+addf and2.0 servo-thread
+addf and2.1 servo-thread
+addf not.0 servo-thread
+net x-hlfb-status => and2.0.in0
+net y-hlfb-status => and2.0.in1
+net z-hlfb-status => and2.1.in0
+net xy-hlfb-ok    and2.0.out => and2.1.in1
+net all-hlfb-ok   and2.1.out => not.0.in
+net hlfb-fault    not.0.out 
