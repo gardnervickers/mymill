@@ -301,9 +301,7 @@ net tooloffset-z  <=  motion.tooloffset.z
 #  ---ignore tool prepare requests---
 net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
 
-
-
-net machine-is-enabled  =>     hm2_7i76e.0.7i76.0.0.output-01 hm2_7i76e.0.7i76.0.0.output-00
+net machine-is-enabled => hm2_7i76e.0.7i76.0.0.output-01 hm2_7i76e.0.7i76.0.0.output-00
 
 # Sensors
 # 28 - x home
@@ -313,20 +311,17 @@ net machine-is-enabled  =>     hm2_7i76e.0.7i76.0.0.output-01 hm2_7i76e.0.7i76.0
 # 32 - aux2
 # 33 - aux3
 
-# HLFB
-net y-hlfb-status hm2_7i76e.0.7i76.0.0.input-24
-net a-hlfb-status hm2_7i76e.0.7i76.0.0.input-25
-net z-hlfb-status hm2_7i76e.0.7i76.0.0.input-26
-net x-hlfb-status hm2_7i76e.0.7i76.0.0.input-27
 
-loadrt and2 count=2
-loadrt not count=1
-addf and2.0 servo-thread
-addf and2.1 servo-thread
-addf not.0 servo-thread
-net x-hlfb-status => and2.0.in0
-net y-hlfb-status => and2.0.in1
-net z-hlfb-status => and2.1.in0
-net xy-hlfb-ok    and2.0.out => and2.1.in1
-net all-hlfb-ok   and2.1.out => not.0.in
-net hlfb-fault    not.0.out 
+# HLFB
+
+alias pin hm2_7i76e.0.7i76.0.0.input-24-not y-hlfb-in
+alias pin hm2_7i76e.0.7i76.0.0.input-25-not a-hlfb-in
+alias pin hm2_7i76e.0.7i76.0.0.input-26-not z-hlfb-in
+alias pin hm2_7i76e.0.7i76.0.0.input-27-not x-hlfb-in
+
+loadrt logic count=1 personality=0x203  # 3‑input OR gate
+addf logic.0 servo-thread
+net x-fault logic.0.in-00 <= x-hlfb-in
+net y-fault logic.0.in-01 <= y-hlfb-in
+net z-fault logic.0.in-02 <= z-hlfb-in
+net hlfb_any <= logic.0.or

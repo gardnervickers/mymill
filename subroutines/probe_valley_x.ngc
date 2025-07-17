@@ -37,7 +37,7 @@ o<probe_valley_x> sub
 
   (Probe Tool Safety Check)
   o100 if [#5400 NE #<probe_tool_number>]
-      (MSG, Specified probe tool #<probe_tool_number> not in spindle, aborting)
+      (DEBUG, Specified probe tool %d#<probe_tool_number> not in spindle, aborting)
       M50 P1
       o<probe_valley_x> return
   o100 endif
@@ -68,7 +68,7 @@ o<probe_valley_x> sub
   #<x_minus_probed> = #5061
 
   (Call sub "probe_x_plus" to Probe x+ side of Workpiece)
-  o<probe_x_plus> call [#3014][#3015][#3016][3017][#3018 + #3026][#3019][#3032]
+  o<probe_x_plus> call [#3014][#3015][#3016][3017][#3018 + #3028][#3019][#3032]
 
   #<x_plus_probed> = #5061
 
