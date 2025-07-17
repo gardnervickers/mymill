@@ -288,10 +288,6 @@ net machine-is-enabled        <=  motion.motion-enabled
 
 #  ---digital in / out signals---
 
-#  ---estop signals---
-
-net estop-out     <=  iocontrol.0.user-enable-out
-net estop-out     =>  iocontrol.0.emc-enable-in
 
 #  ---signals to show tool offset in the GUI---
 
@@ -319,9 +315,37 @@ alias pin hm2_7i76e.0.7i76.0.0.input-25-not a-hlfb-in
 alias pin hm2_7i76e.0.7i76.0.0.input-26-not z-hlfb-in
 alias pin hm2_7i76e.0.7i76.0.0.input-27-not x-hlfb-in
 
-loadrt logic count=1 personality=0x203  # 3‑input OR gate
-addf logic.0 servo-thread
-net x-fault logic.0.in-00 <= x-hlfb-in
-net y-fault logic.0.in-01 <= y-hlfb-in
-net z-fault logic.0.in-02 <= z-hlfb-in
-net hlfb_any <= logic.0.or
+loadrt logic names=hlfb-or-fault personality=0x203  # 3‑input OR gate
+addf hlfb-or-fault servo-thread
+net x-fault hlfb-or-fault.in-00 <= x-hlfb-in
+net y-fault hlfb-or-fault.in-01 <= y-hlfb-in
+net z-fault hlfb-or-fault.in-02 <= z-hlfb-in
+
+# hlfb_fault will be true if any axis is faulting.
+net hlfb-fault <= hlfb-or-fault.or
+
+# We have a machine-is-enabled pin which controls both the steppers (turning them on), as well
+# as the z axis brake. If motion.motion-enabled is TRUE, then we should power on the motors and turn 
+# off the brake, wait 100ms, and then look at both the fault pin and the motion.motion-enabled pins. 
+# If there is a fault then we will turn off the motors. If motion.motion-enabled is false then 
+# we will turn off the motors. 
+
+
+loadrt estop_latch count=1
+loadrt timedelay names=machine-on-delay
+loadrt logic names=machine-on-and-faulted personality=0x102  # 2‑input AND gate
+addf estop-latch.0 servo-thread
+addf machine-on-delay servo-thread
+addf machine-on-and-faulted servo-thread
+
+# When the machine starts up, we trigger a timer. After the timer fires we set true.
+setp machine-on-delay.on-delay 0.100 
+net machine-is-enabled => machine-on-delay.in 
+net estop-machine-on-delay-ready machine-on-delay.out => machine-on-and-faulted.in-00
+net hlfb-fault => machine-on-and-faulted.in-01
+
+net estop-trigger-fault machine-on-and-faulted.and => estop-latch.0.fault-in
+
+net estop-ui-request-enable iocontrol.0.user-request-enable => estop-latch.0.reset
+net estop-ui-is-enabled iocontrol.0.user-enable-out => estop-latch.0.ok-in
+net estop-latch-enable-machine estop-latch.0.ok-out => iocontrol.0.emc-enable-in
