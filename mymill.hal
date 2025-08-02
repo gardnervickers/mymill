@@ -44,7 +44,7 @@ loadrt logic names=probe.either personality=0x202  # 2‑input OR gate
 addf probe.either servo-thread
 net probe.toolsetter.trigger probe.either.in-00 <= hm2_7i76e.0.7i76.0.0.input-16-not
 setp probe.either.in-01 0 # TODO: FIX ME
-#net probe.touch.trigger probe.either.in-01 <= hm2_7i76e.0.7i76.0.0.input-17-not
+net probe.touch.trigger probe.either.in-01 <= hm2_7i76e.0.7i76.0.0.input-17-not
 net probe-in <= probe.either.or
 
 #  ---probe signal---
