@@ -224,6 +224,8 @@ setp   pid.s.FF2       [SPINDLE_0]FF2
 setp   pid.s.deadband  [SPINDLE_0]DEADBAND
 setp   pid.s.maxoutput [SPINDLE_0]MAX_OUTPUT
 setp   pid.s.error-previous-target true
+# Set spindle mode to FWD/REV 
+setp   hm2_7i76e.0.7i76.0.0.spinmode 1
 
 net spindle-index-enable  =>  pid.s.index-enable
 net spindle-enable        =>  pid.s.enable
@@ -245,6 +247,7 @@ net spindle-revs               =>  spindle.0.revs
 net spindle-at-speed           =>  spindle.0.at-speed
 net spindle-vel-fb-rps         =>  spindle.0.speed-in
 net spindle-index-enable      <=>  spindle.0.index-enable
+
 
 # ---Setup spindle at speed signals---
 

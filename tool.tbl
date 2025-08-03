@@ -11,14 +11,15 @@ T9     P9     Z+0.000000   D+5.000000   ; 150 Series High-Speed Steel Jobber - C
 T10    P10    Z+0.000000   D+5.500000   ; 150 Series High-Speed Steel Jobber - Chicago Latrobe 57723
 T11    P11    Z+0.000000   D+6.000000   ; 150 Series High-Speed Steel Jobber - Chicago Latrobe 57723
 T12    P12    Z+89.064367  D+6.350000   ; 2Fl 1/4in Ball End Mill (Purple)
+T13    P13    Z+78.521034  D+3.175000   ; 2Fl 1/8in HSS Flat End Mill (Precision Matthews)
 T20    P20    Z+0.000000   D+0.793750   ; SpeTool - Carbide 1/32
 T21    P21    Z+0.000000   D+6.000000   ; unknown - 90deg 6mm engraver
 T22    P22    Z+0.000000   D+6.350000   ; Speed Tiger - 1/4 3flt Carbide Speed Tiger
 T23    P23    Z+71.697700  D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute Stub - 45 Degree ZRN Coated for Aluminum, 1/2 LOC
 T24    P24    Z+0.000000   D+3.175000   ; Kodiak Cutting Tools - Kodiak 0.1250 (1/8) Carbide End Mill - 2 Flute Stub - 45 Degree ZRN Coated for Aluminum, 1/4 LOC
 T25    P25    Z+0.000000   D+3.175000   ; Kodiak Cutting Tools - Kodiak 0.1250 (1/8) Carbide End Mill - 2 Flute - 45 Degree ZRN Coated for Aluminum with Corner Radius, 1/2 LOC
-T26    P26    Z+0.000000   D+4.762500   ; Kodiak Cutting Tools - Kodiak 0.1875 (3/16) Carbide End Mill - 2 Flute Ball Nose, 5/8 LOC
+T26    P26    Z+74.952700  D+4.762500   ; Kodiak Cutting Tools - Kodiak 0.1875 (3/16) Carbide End Mill - 2 Flute Ball Nose, 5/8 LOC
 T27    P27    Z+0.000000   D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute Stub - 45 Degree ZRN Coated for Aluminum with Corner Radius, 1/2 LOC
 T28    P28    Z+0.000000   D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute - 45 Degree ZRN Coated for Aluminum with Corner Radius, 3/4 LOC
 T29    P29    Z+0.000000   D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute - 45 Degree ZRN Coated for Aluminum, 3/4 LOC
-T99    P99    Z+89.997967  D+2.856960   ; probe
+T99    P99    Z+127.377700 D+3.175000   ; probe
