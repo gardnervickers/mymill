@@ -231,7 +231,42 @@ net spindle-index-enable  =>  pid.s.index-enable
 net spindle-enable        =>  pid.s.enable
 net spindle-vel-cmd-rpm     => pid.s.command
 net spindle-vel-fb-rpm      => pid.s.feedback
-net spindle-output        <=  pid.s.output
+
+loadrt lincurve count=1 personality=9
+addf lincurve.0 servo-thread
+net spindle-output pid.s.output => lincurve.0.in
+net compensated-output     lincurve.0.out => hm2_7i76e.0.7i76.0.0.spinout
+
+setp lincurve.0.x-val-00 300
+setp lincurve.0.y-val-00 330 
+
+setp lincurve.0.x-val-01 500 
+setp lincurve.0.y-val-01 400 
+
+
+setp lincurve.0.x-val-02 1000 
+setp lincurve.0.y-val-02 600 
+
+
+setp lincurve.0.x-val-03 1500 
+setp lincurve.0.y-val-03 900
+
+ 
+setp lincurve.0.x-val-04 2400 
+setp lincurve.0.y-val-04 1500 
+
+
+setp lincurve.0.x-val-05 3000 
+setp lincurve.0.y-val-05 2000 
+
+setp lincurve.0.x-val-06 3900 
+setp lincurve.0.y-val-06 2500
+
+setp lincurve.0.x-val-07 4000 
+setp lincurve.0.y-val-07 2800
+
+setp lincurve.0.x-val-08 4250 
+setp lincurve.0.y-val-08 3000 
 
 # ---setup spindle control signals---
 
@@ -254,7 +289,6 @@ setp   hm2_7i76e.0.7i76.0.0.spinout-minlim    [SPINDLE_0]OUTPUT_MIN_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-maxlim    [SPINDLE_0]OUTPUT_MAX_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-scalemax  [SPINDLE_0]OUTPUT_SCALE
 
-net spindle-output      => hm2_7i76e.0.7i76.0.0.spinout
 net spindle-cw          => hm2_7i76e.0.7i76.0.0.spinena
 net spindle-ccw         => hm2_7i76e.0.7i76.0.0.spindir
 
