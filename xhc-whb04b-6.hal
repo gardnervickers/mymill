@@ -45,13 +45,13 @@ net pdnt.axis.X.select                    whb.halui.axis.x.select
 net pdnt.axis.y.select                    whb.halui.axis.y.select
 net pdnt.axis.Z.select                    whb.halui.axis.z.select
 
-net pdnt.axis.x.jog-scale                 whb.axis.x.jog-scale                  axis.x.jog-scale
-net pdnt.axis.y.jog-scale                 whb.axis.y.jog-scale                  axis.y.jog-scale
-net pdnt.axis.z.jog-scale                 whb.axis.z.jog-scale                  axis.z.jog-scale
+#net pdnt.axis.x.jog-scale                 whb.axis.x.jog-scale                  axis.x.jog-scale
+#net pdnt.axis.y.jog-scale                 whb.axis.y.jog-scale                  axis.y.jog-scale
+#net pdnt.axis.z.jog-scale                 whb.axis.z.jog-scale                  axis.z.jog-scale
 
-net pdnt.axis.x.jog-counts                whb.axis.x.jog-counts                 axis.x.jog-counts
-net pdnt.axis.y.jog-counts                whb.axis.y.jog-counts                 axis.y.jog-counts
-net pdnt.axis.z.jog-counts                whb.axis.z.jog-counts                 axis.z.jog-counts
+#net pdnt.axis.x.jog-counts                whb.axis.x.jog-counts                 axis.x.jog-counts
+#net pdnt.axis.y.jog-counts                whb.axis.y.jog-counts                 axis.y.jog-counts
+#net pdnt.axis.z.jog-counts                whb.axis.z.jog-counts                 axis.z.jog-counts
 
 net pdnt.axis.x.jog-enable                whb.axis.x.jog-enable                 axis.x.jog-enable
 net pdnt.axis.y.jog-enable                whb.axis.y.jog-enable                 axis.y.jog-enable
@@ -161,4 +161,45 @@ net pdnt.axis.z.pos-feedback              halui.axis.z.pos-feedback             
 net pdnt.axis.x.pos-relative              halui.axis.x.pos-relative             whb.halui.axis.x.pos-relative
 net pdnt.axis.y.pos-relative              halui.axis.y.pos-relative             whb.halui.axis.y.pos-relative
 net pdnt.axis.z.pos-relative              halui.axis.z.pos-relative             whb.halui.axis.z.pos-relative
+
+
+# pass jog counts through lowpass to prevent jerking and following errors
+loadrt ilowpass names=ilowpass.jog.0,ilowpass.jog.1,ilowpass.jog.2
+addf   ilowpass.jog.0       servo-thread
+addf   ilowpass.jog.1       servo-thread
+addf   ilowpass.jog.2       servo-thread
+setp   ilowpass.jog.0.scale 1000
+setp   ilowpass.jog.1.scale 1000
+setp   ilowpass.jog.2.scale 1000
+setp   ilowpass.jog.0.gain  0.01
+setp   ilowpass.jog.1.gain  0.01
+setp   ilowpass.jog.2.gain  0.01
+
+# re-scale low-passed jog counts
+loadrt scale names=scale.axis.0,scale.axis.1,scale.axis.2
+addf   scale.axis.0         servo-thread
+addf   scale.axis.1         servo-thread
+addf   scale.axis.2         servo-thread
+setp   scale.axis.0.gain    0.001 
+setp   scale.axis.1.gain    0.001 
+setp   scale.axis.2.gain    0.001 
+setp   scale.axis.0.offset  0
+setp   scale.axis.1.offset  0
+setp   scale.axis.2.offset  0
+
+net  pdnt.axis.0.jog-scale               whb.axis.x.jog-scale               scale.axis.0.in      
+net  pdnt.axis.1.jog-scale               whb.axis.y.jog-scale               scale.axis.1.in      
+net  pdnt.axis.2.jog-scale               whb.axis.z.jog-scale               scale.axis.2.in 
+net  scale.axis.0.jog-scale              scale.axis.0.out                   axis.x.jog-scale
+net  scale.axis.1.jog-scale              scale.axis.1.out                   axis.y.jog-scale
+net  scale.axis.2.jog-scale              scale.axis.2.out                   axis.z.jog-scale
+
+net  pdnt.axis.0.jog-counts              whb.axis.x.jog-counts              ilowpass.jog.0.in
+net  pdnt.axis.1.jog-counts              whb.axis.y.jog-counts              ilowpass.jog.1.in
+net  pdnt.axis.2.jog-counts              whb.axis.z.jog-counts              ilowpass.jog.2.in
+net  pdnt.ilowpass.jog.0.jog-counts      ilowpass.jog.0.out                 axis.x.jog-counts
+net  pdnt.ilowpass.jog.1.jog-counts      ilowpass.jog.1.out                 axis.y.jog-counts
+net  pdnt.ilowpass.jog.2.jog-counts      ilowpass.jog.2.out                 axis.z.jog-counts
+
+
 
