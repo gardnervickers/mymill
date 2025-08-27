@@ -23,4 +23,5 @@ T26    P26    Z+74.952700  D+4.762500   ; Kodiak Cutting Tools - Kodiak 0.1875 (
 T27    P27    Z+0.000000   D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute Stub - 45 Degree ZRN Coated for Aluminum with Corner Radius, 1/2 LOC
 T28    P28    Z+82.102700  D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute - 45 Degree ZRN Coated for Aluminum with Corner Radius, 3/4 LOC
 T29    P29    Z+0.000000   D+6.350000   ; Kodiak Cutting Tools - Kodiak 0.2500 (1/4) Carbide End Mill - 2 Flute - 45 Degree ZRN Coated for Aluminum, 3/4 LOC
+T30    P30    Z+0.000000   D+9.525000   ; 3/8in HSS PM Flat Endmill - 2 Flute - Precision Matthews
 T99    P99    Z+129.251033 D+3.175000   ; probe
