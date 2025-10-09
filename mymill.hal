@@ -8,7 +8,7 @@ loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JO
 loadrt hostmot2
 loadrt hm2_eth board_ip="10.10.10.10" config="num_encoders=1 num_pwmgens=0 num_stepgens=5 sserial_port_0=2xxxxxx" 
 setp    hm2_7i76e.0.watchdog.timeout_ns 5000000
-loadrt pid names=pid.x,pid.y,pid.z,pid.s
+loadrt pid names=pid.x,pid.y,pid.z,pid.s,pid.a
 
 addf hm2_7i76e.0.read          servo-thread
 addf motion-command-handler   servo-thread
@@ -17,6 +17,7 @@ addf pid.x.do-pid-calcs       servo-thread
 addf pid.y.do-pid-calcs       servo-thread
 addf pid.z.do-pid-calcs       servo-thread
 addf pid.s.do-pid-calcs       servo-thread
+addf pid.a.do-pid-calcs       servo-thread
 addf hm2_7i76e.0.write         servo-thread
 setp hm2_7i76e.0.dpll.01.timer-us -50
 setp hm2_7i76e.0.stepgen.timer-number 1
@@ -210,6 +211,59 @@ net home-z     =>  joint.2.home-sw-in
 net z-neg-limit     =>  joint.2.neg-lim-sw-in
 net z-pos-limit     =>  joint.2.pos-lim-sw-in
 
+
+#*******************
+#  AXIS A JOINT 3 
+#*******************
+setp   pid.a.Pgain     [JOINT_2]P
+setp   pid.a.Igain     [JOINT_2]I
+setp   pid.a.Dgain     [JOINT_2]D
+setp   pid.a.bias      [JOINT_2]BIAS
+setp   pid.a.FF0       [JOINT_2]FF0
+setp   pid.a.FF1       [JOINT_2]FF1
+setp   pid.a.FF2       [JOINT_2]FF2
+setp   pid.a.deadband  [JOINT_2]DEADBAND
+setp   pid.a.maxoutput [JOINT_2]MAX_OUTPUT
+setp   pid.a.error-previous-target true
+# This setting is to limit bogus stepgen
+# velocity corrections caused by position
+# feedback sample time jitter.
+setp   pid.a.maxerror 0.000500
+
+net a-index-enable  =>  pid.a.index-enable
+net a-enable        =>  pid.a.enable
+net a-pos-cmd       =>  pid.a.command
+net a-pos-fb        =>  pid.a.feedback
+net a-output        <=  pid.a.output
+
+# Step Gen signals/setup
+
+setp   hm2_7i76e.0.stepgen.03.dirsetup        [JOINT_3]DIRSETUP
+setp   hm2_7i76e.0.stepgen.03.dirhold         [JOINT_3]DIRHOLD
+setp   hm2_7i76e.0.stepgen.03.steplen         [JOINT_3]STEPLEN
+setp   hm2_7i76e.0.stepgen.03.stepspace       [JOINT_3]STEPSPACE
+setp   hm2_7i76e.0.stepgen.03.position-scale  [JOINT_3]STEP_SCALE
+setp   hm2_7i76e.0.stepgen.03.step_type        0
+setp   hm2_7i76e.0.stepgen.03.control-type     1
+setp   hm2_7i76e.0.stepgen.03.maxaccel         [JOINT_3]STEPGEN_MAXACCEL
+setp   hm2_7i76e.0.stepgen.03.maxvel           [JOINT_3]STEPGEN_MAXVEL
+
+# ---closedloop stepper signals---
+
+net a-pos-cmd    <= joint.3.motor-pos-cmd
+net a-vel-cmd    <= joint.3.vel-cmd
+net a-output     => hm2_7i76e.0.stepgen.03.velocity-cmd
+net a-pos-fb     <= hm2_7i76e.0.stepgen.03.position-fb
+net a-pos-fb     => joint.3.motor-pos-fb
+net a-enable     <= joint.3.amp-enable-out
+net a-enable     => hm2_7i76e.0.stepgen.03.enable
+
+# ---setup home / limit switch signals---
+
+net home-a     =>  joint.3.home-sw-in
+net a-neg-limit     =>  joint.3.neg-lim-sw-in
+net a-pos-limit     =>  joint.3.pos-lim-sw-in
+
 #*******************
 #  SPINDLE
 #*******************
@@ -310,9 +364,6 @@ net machine-is-enabled        <=  motion.motion-enabled
 net tooloffset-x  <=  motion.tooloffset.x
 net tooloffset-z  <=  motion.tooloffset.z
 
-#  ---ignore tool prepare requests---
-net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
-
 net machine-is-enabled => hm2_7i76e.0.7i76.0.0.output-01 hm2_7i76e.0.7i76.0.0.output-00
 
 # Sensors
@@ -374,3 +425,10 @@ net coolant-mist => mist-out
 
 # Drawbar 
 alias pin hm2_7i76e.0.7i76.0.0.output-04 drawbar-out
+
+# Manual tool change
+loadusr -W hal_manualtoolchange
+net tool-change-request     iocontrol.0.tool-change       =>  hal_manualtoolchange.change
+net tool-change-confirmed   iocontrol.0.tool-changed      <=  hal_manualtoolchange.changed
+net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number
+net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
