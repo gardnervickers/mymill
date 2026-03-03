@@ -58,11 +58,16 @@ net estop-latch-enable-machine estop-latch.0.ok-out => iocontrol.0.emc-enable-in
 net tool-change-loopback <= iocontrol.0.tool-change => iocontrol.0.tool-changed
 net tool-prepare-loopback <= iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
 
-# Probe and spindle feedback are stubbed for startup checks.
+# Probe and spindle control are stubbed for startup checks.
 newsig probe-in bit
-newsig spindle-at-speed bit
+newsig spindle-enable bit
+newsig spindle-fwd bit
+newsig spindle-rev bit
 sets probe-in false
 net probe-in => motion.probe-input
-net spindle-speed-loopback <= spindle.0.speed-out-rps => spindle.0.speed-in
-sets spindle-at-speed true
-net spindle-at-speed => spindle.0.at-speed
+net spindle-enable <= spindle.0.on
+net spindle-enable => motion.digital-in-02
+net spindle-fwd <= spindle.0.forward => motion.digital-in-00
+net spindle-rev <= spindle.0.reverse => motion.digital-in-01
+net spindle-speed-loopback <= spindle.0.speed-out-rps-abs => spindle.0.speed-in
+net spindle-enable => spindle.0.at-speed

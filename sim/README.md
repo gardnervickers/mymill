@@ -36,6 +36,36 @@ linuxcnc sim/mymill-sim.ini
 
 This should be treated as a startup and config-integrity check, not a fidelity test for real hardware timing or UI plugins.
 
+## Spindle command test
+
+The sim cannot reproduce the real 7i76E TB4 electrical behavior, but it can validate the LinuxCNC command flow for the open-loop spindle setup.
+
+The sim exports these monitor signals:
+
+- `spindle-enable`
+- `spindle-fwd`
+- `spindle-rev`
+- `spindle-speed-loopback`
+
+You can inspect them with `halcmd show sig spindle-` or with HAL Meter/HAL Show while Axis is running.
+
+In Axis MDI, use this sequence:
+
+```ngc
+M3 S1000
+M5
+M4 S1000
+M5
+```
+
+Expected behavior:
+
+- `M3 S1000`: `spindle-enable=true`, `spindle-fwd=true`, `spindle-rev=false`
+- `M4 S1000`: `spindle-enable=true`, `spindle-fwd=false`, `spindle-rev=true`
+- `M5`: all three go false
+
+`spindle-speed-loopback` should follow the absolute commanded spindle speed, so `spindle.0.speed-in` behaves like an open-loop feedback echo.
+
 ## Lima on macOS
 
 Lima is a reasonable way to host the Linux VM, but keep the expectations narrow:

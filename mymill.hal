@@ -8,7 +8,7 @@ loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JO
 loadrt hostmot2
 loadrt hm2_eth board_ip="10.10.10.10" config="num_encoders=1 num_pwmgens=0 num_stepgens=5 sserial_port_0=2xxxxxx" 
 setp    hm2_7i76e.0.watchdog.timeout_ns 5000000
-loadrt pid names=pid.x,pid.y,pid.z,pid.s,pid.a
+loadrt pid names=pid.x,pid.y,pid.z,pid.a
 
 addf hm2_7i76e.0.read          servo-thread
 addf motion-command-handler   servo-thread
@@ -16,7 +16,6 @@ addf motion-controller        servo-thread
 addf pid.x.do-pid-calcs       servo-thread
 addf pid.y.do-pid-calcs       servo-thread
 addf pid.z.do-pid-calcs       servo-thread
-addf pid.s.do-pid-calcs       servo-thread
 addf pid.a.do-pid-calcs       servo-thread
 addf hm2_7i76e.0.write         servo-thread
 setp hm2_7i76e.0.dpll.01.timer-us -50
@@ -264,40 +263,17 @@ net a-pos-limit     =>  joint.3.pos-lim-sw-in
 #  SPINDLE
 #*******************
 
-setp   pid.s.Pgain     [SPINDLE_0]P
-setp   pid.s.Igain     [SPINDLE_0]I
-setp   pid.s.Dgain     [SPINDLE_0]D
-setp   pid.s.bias      [SPINDLE_0]BIAS
-setp   pid.s.FF0       [SPINDLE_0]FF0
-setp   pid.s.FF1       [SPINDLE_0]FF1
-setp   pid.s.FF2       [SPINDLE_0]FF2
-setp   pid.s.deadband  [SPINDLE_0]DEADBAND
-setp   pid.s.maxoutput [SPINDLE_0]MAX_OUTPUT
-setp   pid.s.error-previous-target true
 # Set spindle mode to FWD/REV 
 setp   hm2_7i76e.0.7i76.0.0.spinmode 1
 
-net spindle-index-enable  =>  pid.s.index-enable
-net spindle-enable        =>  pid.s.enable
-net spindle-vel-cmd-rpm     => pid.s.command
-net spindle-vel-fb-rpm      => pid.s.feedback
-
-net spindle-out pid.s.output => hm2_7i76e.0.7i76.0.0.spinout
-
-# ---setup spindle control signals---
-
-net spindle-vel-cmd-rps        <=  spindle.0.speed-out-rps
 net spindle-vel-cmd-rps-abs    <=  spindle.0.speed-out-rps-abs
-net spindle-vel-cmd-rpm        <=  spindle.0.speed-out
 net spindle-vel-cmd-rpm-abs    <=  spindle.0.speed-out-abs
 net spindle-enable             <=  spindle.0.on
 net spindle-cw                 <=  spindle.0.forward
 net spindle-ccw                <=  spindle.0.reverse
-net spindle-brake              <=  spindle.0.brake
-net spindle-revs               =>  spindle.0.revs
-net spindle-at-speed           =>  spindle.0.at-speed
-net spindle-vel-fb-rps         =>  spindle.0.speed-in
-net spindle-index-enable      <=>  spindle.0.index-enable
+net spindle-enable             =>  spindle.0.at-speed
+net spindle-vel-cmd-rps-abs    =>  spindle.0.speed-in
+net spindle-vel-cmd-rpm-abs    =>  hm2_7i76e.0.7i76.0.0.spinout
 
 # ---digital potentionmeter output signals/setup---
 
@@ -305,11 +281,10 @@ setp   hm2_7i76e.0.7i76.0.0.spinout-minlim    [SPINDLE_0]OUTPUT_MIN_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-maxlim    [SPINDLE_0]OUTPUT_MAX_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-scalemax  [SPINDLE_0]OUTPUT_SCALE
 
-#net spindle-cw          => hm2_7i76e.0.7i76.0.0.spinena
-#net spindle-ccw         => hm2_7i76e.0.7i76.0.0.spindir
-
-# ---Setup spindle at speed signals---
-sets spindle-at-speed true
+# FWD/REV mode uses the isolated opto outputs as pull-down switches.
+# Wire FWD-/REV- to the spindle control 0V common so spinena/spindir pull FWD+/REV+ low when active.
+net spindle-cw          => hm2_7i76e.0.7i76.0.0.spinena
+net spindle-ccw         => hm2_7i76e.0.7i76.0.0.spindir
 
 #******************************
 # connect miscellaneous signals
