@@ -25,9 +25,6 @@ setp hm2_7i76e.0.stepgen.timer-number 1
 # external output signals
 
 
-# --- MACHINE-IS-ENABLED ---
-net machine-is-enabled  =>     hm2_7i76e.0.7i76.0.0.output-01
-
 # external input signals
 
 
@@ -44,7 +41,6 @@ net home-z     <=  hm2_7i76e.0.7i76.0.0.input-30-not
 loadrt logic names=probe.either personality=0x202  # 2‑input OR gate
 addf probe.either servo-thread
 net probe.toolsetter.trigger probe.either.in-00 <= hm2_7i76e.0.7i76.0.0.input-16-not
-setp probe.either.in-01 0 # TODO: FIX ME
 net probe.touch.trigger probe.either.in-01 <= hm2_7i76e.0.7i76.0.0.input-17-not
 net probe-in <= probe.either.or
 
@@ -215,15 +211,15 @@ net z-pos-limit     =>  joint.2.pos-lim-sw-in
 #*******************
 #  AXIS A JOINT 3 
 #*******************
-setp   pid.a.Pgain     [JOINT_2]P
-setp   pid.a.Igain     [JOINT_2]I
-setp   pid.a.Dgain     [JOINT_2]D
-setp   pid.a.bias      [JOINT_2]BIAS
-setp   pid.a.FF0       [JOINT_2]FF0
-setp   pid.a.FF1       [JOINT_2]FF1
-setp   pid.a.FF2       [JOINT_2]FF2
-setp   pid.a.deadband  [JOINT_2]DEADBAND
-setp   pid.a.maxoutput [JOINT_2]MAX_OUTPUT
+setp   pid.a.Pgain     [JOINT_3]P
+setp   pid.a.Igain     [JOINT_3]I
+setp   pid.a.Dgain     [JOINT_3]D
+setp   pid.a.bias      [JOINT_3]BIAS
+setp   pid.a.FF0       [JOINT_3]FF0
+setp   pid.a.FF1       [JOINT_3]FF1
+setp   pid.a.FF2       [JOINT_3]FF2
+setp   pid.a.deadband  [JOINT_3]DEADBAND
+setp   pid.a.maxoutput [JOINT_3]MAX_OUTPUT
 setp   pid.a.error-previous-target true
 # This setting is to limit bogus stepgen
 # velocity corrections caused by position
@@ -260,7 +256,7 @@ net a-enable     => hm2_7i76e.0.stepgen.03.enable
 
 # ---setup home / limit switch signals---
 
-net home-a     =>  joint.3.home-sw-in
+# A-axis homing is not wired in this config.
 net a-neg-limit     =>  joint.3.neg-lim-sw-in
 net a-pos-limit     =>  joint.3.pos-lim-sw-in
 
@@ -324,17 +320,18 @@ net axis-select-x  halui.axis.x.select
 net jog-x-pos      halui.axis.x.plus
 net jog-x-neg      halui.axis.x.minus
 net jog-x-analog   halui.axis.x.analog
-net x-is-homed     halui.joint.0.is-homed
+net pdnt.axis.X.is-homed     halui.joint.0.is-homed
 net axis-select-y  halui.axis.y.select
 net jog-y-pos      halui.axis.y.plus
 net jog-y-neg      halui.axis.y.minus
 net jog-y-analog   halui.axis.y.analog
-net y-is-homed     halui.joint.1.is-homed
+net pdnt.axis.Y.is-homed     halui.joint.1.is-homed
 net axis-select-z  halui.axis.z.select
 net jog-z-pos      halui.axis.z.plus
 net jog-z-neg      halui.axis.z.minus
 net jog-z-analog   halui.axis.z.analog
-net z-is-homed     halui.joint.2.is-homed
+net pdnt.axis.Z.is-homed     halui.joint.2.is-homed
+net pdnt.axis.A.is-homed     halui.joint.3.is-homed
 net jog-selected-pos      halui.axis.selected.plus
 net jog-selected-neg      halui.axis.selected.minus
 net spindle-manual-cw     halui.spindle.0.forward
@@ -342,7 +339,7 @@ net spindle-manual-ccw    halui.spindle.0.reverse
 net spindle-manual-stop   halui.spindle.0.stop
 net machine-is-on         halui.machine.is-on
 net jog-speed             halui.axis.jog-speed
-net MDI-mode              halui.mode.is-mdi
+net pdnt.mode.is-mdi      halui.mode.is-mdi
 
 #  ---coolant signals---
 net coolant-mist      <=  iocontrol.0.coolant-mist
@@ -374,9 +371,10 @@ alias pin hm2_7i76e.0.7i76.0.0.input-25-not a-hlfb-in
 alias pin hm2_7i76e.0.7i76.0.0.input-26-not z-hlfb-in
 alias pin hm2_7i76e.0.7i76.0.0.input-27-not x-hlfb-in
 
-net x-hflb-in => joint.0.amp-fault-in
-net y-hflb-in => joint.1.amp-fault-in
-net z-hflb-in => joint.2.amp-fault-in
+net x-hlfb <= x-hlfb-in => joint.0.amp-fault-in
+net y-hlfb <= y-hlfb-in => joint.1.amp-fault-in
+net z-hlfb <= z-hlfb-in => joint.2.amp-fault-in
+net a-hlfb <= a-hlfb-in => joint.3.amp-fault-in
 
 loadrt estop_latch count=1
 addf estop-latch.0 servo-thread

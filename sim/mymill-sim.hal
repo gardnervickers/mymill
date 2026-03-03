@@ -1,0 +1,68 @@
+# Hardware-free simulator scaffold for validating LinuxCNC startup on Linux.
+# Motion commands are looped directly back into feedback so the machine tracks perfectly.
+
+loadrt [KINS]KINEMATICS
+loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS num_dio=6 num_aio=3
+loadrt estop_latch count=1
+
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+addf estop-latch.0 servo-thread
+
+# Joint feedback loopback
+net x-pos-loopback <= joint.0.motor-pos-cmd => joint.0.motor-pos-fb
+net y-pos-loopback <= joint.1.motor-pos-cmd => joint.1.motor-pos-fb
+net z-pos-loopback <= joint.2.motor-pos-cmd => joint.2.motor-pos-fb
+net a-pos-loopback <= joint.3.motor-pos-cmd => joint.3.motor-pos-fb
+
+# Keep home and limit switches inactive by default.
+newsig home-x bit
+newsig home-y bit
+newsig home-z bit
+newsig x-neg-limit bit
+newsig x-pos-limit bit
+newsig y-neg-limit bit
+newsig y-pos-limit bit
+newsig z-neg-limit bit
+newsig z-pos-limit bit
+newsig a-neg-limit bit
+newsig a-pos-limit bit
+sets home-x false
+sets home-y false
+sets home-z false
+sets x-neg-limit false
+sets x-pos-limit false
+sets y-neg-limit false
+sets y-pos-limit false
+sets z-neg-limit false
+sets z-pos-limit false
+sets a-neg-limit false
+sets a-pos-limit false
+
+net home-x => joint.0.home-sw-in
+net home-y => joint.1.home-sw-in
+net home-z => joint.2.home-sw-in
+net x-neg-limit => joint.0.neg-lim-sw-in
+net x-pos-limit => joint.0.pos-lim-sw-in
+net y-neg-limit => joint.1.neg-lim-sw-in
+net y-pos-limit => joint.1.pos-lim-sw-in
+net z-neg-limit => joint.2.neg-lim-sw-in
+net z-pos-limit => joint.2.pos-lim-sw-in
+net a-neg-limit => joint.3.neg-lim-sw-in
+net a-pos-limit => joint.3.pos-lim-sw-in
+
+# Tool change and estop loopback.
+net estop-ui-request-enable <= iocontrol.0.user-request-enable => estop-latch.0.reset
+net estop-ui-is-enabled <= iocontrol.0.user-enable-out => estop-latch.0.ok-in
+net estop-latch-enable-machine estop-latch.0.ok-out => iocontrol.0.emc-enable-in
+net tool-change-loopback <= iocontrol.0.tool-change => iocontrol.0.tool-changed
+net tool-prepare-loopback <= iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
+
+# Probe and spindle feedback are stubbed for startup checks.
+newsig probe-in bit
+newsig spindle-at-speed bit
+sets probe-in false
+net probe-in => motion.probe-input
+net spindle-speed-loopback <= spindle.0.speed-out-rps => spindle.0.speed-in
+sets spindle-at-speed true
+net spindle-at-speed => spindle.0.at-speed

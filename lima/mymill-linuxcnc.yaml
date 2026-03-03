@@ -1,0 +1,19 @@
+# Lima template for a LinuxCNC simulator guest.
+# The repo itself is mounted by the host wrapper with --mount-only.
+
+images:
+  - location: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+    arch: "x86_64"
+  - location: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-arm64.qcow2"
+    arch: "aarch64"
+
+cpus: 4
+memory: "6GiB"
+disk: "40GiB"
+
+mountType: "virtiofs"
+mountInotify: true
+
+containerd:
+  system: false
+  user: false
