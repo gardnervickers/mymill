@@ -273,7 +273,7 @@ setp   hm2_7i76e.0.7i76.0.0.spinmode 1
 net spindle-vel-cmd-rps-abs    <=  spindle.0.speed-out-rps-abs
 net spindle-vel-cmd-rpm-abs    <=  spindle.0.speed-out-abs
 net spindle-enable             <=  spindle.0.on
-net spindle-reverse            <=  spindle.0.reverse
+net spindle-forward-select     <=  spindle.0.forward
 net spindle-enable             =>  spindle.0.at-speed
 net spindle-vel-cmd-rps-abs    =>  spindle.0.speed-in
 net spindle-vel-cmd-rpm-abs    =>  hm2_7i76e.0.7i76.0.0.spinout
@@ -285,13 +285,14 @@ setp   hm2_7i76e.0.7i76.0.0.spinout-maxlim    [SPINDLE_0]OUTPUT_MAX_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-scalemax  [SPINDLE_0]OUTPUT_SCALE
 
 # Keep spinena tied to spindle.0.on so M3 and M4 both keep the analog speed command alive.
-# spindle.0.reverse only selects which TB4 output pair is active.
+# The physical output polarity on this machine is inverted from the intuitive FWD/REV
+# naming, so use spindle.0.forward to select the alternate output pair.
 # Effective states:
-#   M3 -> spinena=1, spindir=0
-#   M4 -> spinena=1, spindir=1
+#   M3 -> spinena=1, spindir=1
+#   M4 -> spinena=1, spindir=0
 #   M5 -> spinena=0
 net spindle-enable      => hm2_7i76e.0.7i76.0.0.spinena
-net spindle-reverse     => hm2_7i76e.0.7i76.0.0.spindir
+net spindle-forward-select => hm2_7i76e.0.7i76.0.0.spindir
 
 #******************************
 # connect miscellaneous signals
