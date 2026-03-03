@@ -1,0 +1,15 @@
+o<f360_tip_radius> sub
+
+(use the active probe tool diameter from the tool table, matching Probe Basic)
+o100 if [#<_metric> EQ 1]
+    #<unit_conv> = 1 (Change to 25.4 if using Inches tooltable values with Metric operation mode)
+o100 else
+    #<unit_conv> = 1
+o100 endif
+
+(Probe Basic stores scalar probe calibration in #3032.)
+(Return the effective probe radius so Fusion probing and Probe Basic stay aligned.)
+#<probe_radius> = [[#5410 / 2] * #<unit_conv>]
+#<calibration_offset> = #3032
+
+o<f360_tip_radius> endsub [#<probe_radius> - #<calibration_offset>]

@@ -1,0 +1,26 @@
+%
+(Fusion probing subroutine smoke test)
+(This only exercises no-motion helper macros so it is safe to run as a parser/interpreter check.)
+
+G90 G94 G17 G40 G49 G80
+
+o<f360_tip_radius> call
+#<probe_radius> = #<_value>
+
+o<f360_fast_probe_speed> call
+#<fast_probe_speed> = #<_value>
+
+o<f360_slow_probe_speed> call
+#<slow_probe_speed> = #<_value>
+
+o<f360_slow_probe_distance> call
+#<slow_probe_distance> = #<_value>
+
+o<f360_check_position> call [1.0] [1.0] [0.001] [0]
+o<f360_check_size> call [1.0] [1.0] [0.001] [0]
+o<f360_check_angle> call [0.0] [0.0] [0.1] [0]
+
+(DEBUG, Fusion smoke test resolved macros successfully.)
+(DEBUG, tip_radius=#<probe_radius> fast=#<fast_probe_speed> slow=#<slow_probe_speed> slow_dist=#<slow_probe_distance>)
+M2
+%
