@@ -263,7 +263,11 @@ net a-pos-limit     =>  joint.3.pos-lim-sw-in
 #  SPINDLE
 #*******************
 
-# Set spindle mode to FWD/REV 
+# Set spindle mode to FWD/REV.
+# On this 7i76E setup, the spindle block behaves as:
+#   spinena  = master spindle enable (must stay true for both M3 and M4)
+#   spindir  = direction selector
+# If spinena is false, the analog spindle output is forced to the low end.
 setp   hm2_7i76e.0.7i76.0.0.spinmode 1
 
 net spindle-vel-cmd-rps-abs    <=  spindle.0.speed-out-rps-abs
@@ -280,8 +284,12 @@ setp   hm2_7i76e.0.7i76.0.0.spinout-minlim    [SPINDLE_0]OUTPUT_MIN_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-maxlim    [SPINDLE_0]OUTPUT_MAX_LIMIT
 setp   hm2_7i76e.0.7i76.0.0.spinout-scalemax  [SPINDLE_0]OUTPUT_SCALE
 
-# In spinmode 1, spinena is the master spindle enable and spindir selects direction.
-# Keep spinena high whenever the spindle is on so the analog output stays active.
+# Keep spinena tied to spindle.0.on so M3 and M4 both keep the analog speed command alive.
+# spindle.0.reverse only selects which TB4 output pair is active.
+# Effective states:
+#   M3 -> spinena=1, spindir=0
+#   M4 -> spinena=1, spindir=1
+#   M5 -> spinena=0
 net spindle-enable      => hm2_7i76e.0.7i76.0.0.spinena
 net spindle-reverse     => hm2_7i76e.0.7i76.0.0.spindir
 
