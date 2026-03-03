@@ -346,10 +346,10 @@ alias pin hm2_7i76e.0.7i76.0.0.input-25-not a-hlfb-in
 alias pin hm2_7i76e.0.7i76.0.0.input-26-not z-hlfb-in
 alias pin hm2_7i76e.0.7i76.0.0.input-27-not x-hlfb-in
 
-net x-hlfb <= x-hlfb-in => joint.0.amp-fault-in
-net y-hlfb <= y-hlfb-in => joint.1.amp-fault-in
-net z-hlfb <= z-hlfb-in => joint.2.amp-fault-in
-net a-hlfb <= a-hlfb-in => joint.3.amp-fault-in
+#net x-hlfb <= x-hlfb-in => joint.0.amp-fault-in
+#net y-hlfb <= y-hlfb-in => joint.1.amp-fault-in
+#net z-hlfb <= z-hlfb-in => joint.2.amp-fault-in
+#net a-hlfb <= a-hlfb-in => joint.3.amp-fault-in
 
 loadrt estop_latch count=1
 addf estop-latch.0 servo-thread

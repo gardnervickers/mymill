@@ -1,0 +1,24 @@
+# Halshow settings
+# This file is generated automatically.
+wm geometry . 700x475+610+302
+placeFrames 0.40988372093023256
+set ::ratio 0.40988372093023256
+set ::old_w_leftf 160
+set ::watchlist {
+    pin+hm2_7i76e.0.7i76.0.0.spinout
+    pin+hm2_7i76e.0.7i76.0.0.spinena
+    pin+whb.halui.spindle-speed-cmd
+    sig+spindle-out
+    sig+spindle-vel-cmd-rpm
+    sig+spindle-vel-cmd-rpm-abs
+    sig+spindle-vel-cmd-rps
+    sig+spindle-vel-fb-rpm
+    sig+spindle-revs
+}
+set ::workmode watchhal
+set ::watchInterval 100
+set ::col1_width 100
+set ::ffmts 
+set ::ifmts 
+set ::alwaysOnTop 0
+set ::autoSaveWatchlist 1
