@@ -1,6 +1,6 @@
 import linuxcnc
 
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QTimer, Qt
 from qtpy.QtWidgets import QFormLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 
@@ -37,8 +37,8 @@ class UserTab(QWidget):
         layout.addWidget(title)
 
         form = QFormLayout()
-        form.setLabelAlignment(0)
-        form.setFormAlignment(0)
+        form.setLabelAlignment(Qt.Alignment())
+        form.setFormAlignment(Qt.Alignment())
         form.setHorizontalSpacing(12)
         form.setVerticalSpacing(8)
         layout.addLayout(form)
