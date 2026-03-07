@@ -131,27 +131,27 @@ properties = {
     scope      : "post"
   },
   probeFastSpeed: {
-    title      : "Fast probing speed (inch/min)",
-    description: "Fast probing speed for Fusion probing macros.",
+    title      : "Fast probing speed",
+    description: "Fast probing speed in the current program units per minute.",
     group      : "probing",
     type       : "number",
-    value      : 20.0,
+    value      : unit == MM ? 508.0 : 20.0,
     scope      : "post"
   },
   probeSlowSpeed: {
-    title      : "Slow probing speed (inch/min)",
-    description: "Slow probing speed for Fusion probing macros.",
+    title      : "Slow probing speed",
+    description: "Slow probing speed in the current program units per minute.",
     group      : "probing",
     type       : "number",
-    value      : 1.0,
+    value      : unit == MM ? 25.4 : 1.0,
     scope      : "post"
   },
   probeSlowDistance: {
-    title      : "Slow probe distance (inch)",
-    description: "Slow approach distance for Fusion probing macros.",
+    title      : "Slow probe distance",
+    description: "Slow approach distance in the current program units.",
     group      : "probing",
     type       : "number",
-    value      : 0.04,
+    value      : unit == MM ? 1.016 : 0.04,
     scope      : "post"
   },
   probeInUseChannel: {
@@ -331,9 +331,9 @@ function onOpen() {
   writeBlock(gUnitModal.format(unit == MM ? 21 : 20));
   if (programHasProbeOperations()) {
     writeComment("Probing control variables");
-    writeBlock("#<_probeFastSpeed>=", xyzFormat.format((unit == MM ? 25.4 : 1) * getProperty("probeFastSpeed")));
-    writeBlock("#<_probeSlowSpeed>=", xyzFormat.format((unit == MM ? 25.4 : 1) * getProperty("probeSlowSpeed")));
-    writeBlock("#<_probeSlowDistance>=", xyzFormat.format((unit == MM ? 25.4 : 1) * getProperty("probeSlowDistance")));
+    writeBlock("#<_probeFastSpeed>=", xyzFormat.format(getProperty("probeFastSpeed")));
+    writeBlock("#<_probeSlowSpeed>=", xyzFormat.format(getProperty("probeSlowSpeed")));
+    writeBlock("#<_probeSlowDistance>=", xyzFormat.format(getProperty("probeSlowDistance")));
   }
   validateCommonParameters();
 }

@@ -3,12 +3,12 @@ o<f360_slow_probe_distance> sub
 
 (has the slow probe distance been defined)
 o100 if [exists[#<_probeSlowDistance>] EQ 0]
-	(default imperial distance in inch)
-	#<_probeSlowDistance> = 0.040
-
 	o101 if [#<_metric>]
-		(convert to metric if required)
-		#<_probeSlowDistance> = [#<_probeSlowDistance> * 25.4]
+		(default metric distance in mm)
+		#<_probeSlowDistance> = 1.016
+	o101 else
+		(default imperial distance in inch)
+		#<_probeSlowDistance> = 0.040
 	o101 endif
 o100 endif
 
