@@ -7,6 +7,9 @@ loadrt hostmot2
 loadrt hm2_eth board_ip="10.10.10.10" config="num_encoders=1 num_pwmgens=0 num_stepgens=5 sserial_port_0=2xxxxxx" 
 setp    hm2_7i76e.0.watchdog.timeout_ns 5000000
 loadrt pid names=pid.x,pid.y,pid.z,pid.a
+loadrt or2 names=drawbar-request
+loadrt and2 names=drawbar-interlock,spindle-interlock
+loadrt not names=spindle-not-on,drawbar-not-extended
 
 addf hm2_7i76e.0.read          servo-thread
 addf motion-command-handler   servo-thread
@@ -15,6 +18,11 @@ addf pid.x.do-pid-calcs       servo-thread
 addf pid.y.do-pid-calcs       servo-thread
 addf pid.z.do-pid-calcs       servo-thread
 addf pid.a.do-pid-calcs       servo-thread
+addf drawbar-request          servo-thread
+addf drawbar-interlock        servo-thread
+addf spindle-interlock        servo-thread
+addf spindle-not-on           servo-thread
+addf drawbar-not-extended     servo-thread
 addf hm2_7i76e.0.write         servo-thread
 setp hm2_7i76e.0.dpll.01.timer-us -50
 setp hm2_7i76e.0.stepgen.timer-number 1
@@ -270,8 +278,12 @@ setp   hm2_7i76e.0.7i76.0.0.spinmode 1
 
 net spindle-vel-cmd-rps-abs    <=  spindle.0.speed-out-rps-abs
 net spindle-vel-cmd-rpm-abs    <=  spindle.0.speed-out-abs
-net spindle-enable             <=  spindle.0.on
+net spindle-request            <=  spindle.0.on
 net spindle-forward-select     <=  spindle.0.forward
+net spindle-request            =>  spindle-interlock.in0
+net spindle-start-allowed      <=  drawbar-not-extended.out
+net spindle-start-allowed      =>  spindle-interlock.in1
+net spindle-enable             <=  spindle-interlock.out
 net spindle-enable             =>  spindle.0.at-speed
 net spindle-vel-cmd-rps-abs    =>  spindle.0.speed-in
 net spindle-vel-cmd-rpm-abs    =>  hm2_7i76e.0.7i76.0.0.spinout
@@ -369,10 +381,26 @@ alias pin hm2_7i76e.0.7i76.0.0.output-08 touch-probe-air-out
 
 # Drawbar
 alias pin hm2_7i76e.0.7i76.0.0.output-09 drawbar-out
+alias pin drawbar-request.in0 drawbar-manual-request-pin
+alias pin drawbar-request.out drawbar-requested-pin
+alias pin drawbar-interlock.out drawbar-allowed-pin
+alias pin spindle-not-on.out spindle-off-pin
+alias pin spindle-interlock.in0 spindle-request-pin
+alias pin spindle-interlock.out spindle-enable-allowed-pin
+setp drawbar-manual-request-pin FALSE
 
 # Coolant
 alias pin hm2_7i76e.0.7i76.0.0.output-10 mist-out
 net coolant-mist => mist-out
+
+# Drawbar interlock
+# The drawbar may only energize when the spindle is off.
+net drawbar-mcode-request <= motion.digital-out-02 => drawbar-request.in1
+net drawbar-requested <= drawbar-requested-pin => drawbar-interlock.in0
+net spindle-enable => spindle-not-on.in
+net spindle-off <= spindle-off-pin => drawbar-interlock.in1
+net drawbar-allowed <= drawbar-allowed-pin => drawbar-out
+net drawbar-extended <= drawbar-out => drawbar-not-extended.in
 
 # Manual tool change
 net tool-change-request    <= iocontrol.0.tool-change

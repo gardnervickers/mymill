@@ -52,15 +52,17 @@ class UserTab(QWidget):
         self.spindle_speed = QLabel("-")
         self.homing_state = QLabel("-")
         self.drawbar_state = QLabel("-")
+        self.lockout_state = QLabel("-")
 
         form.addRow("Machine", self.machine_state)
         form.addRow("Mode", self.mode_state)
         form.addRow("Spindle", self.spindle_state)
         form.addRow("Speed", self.spindle_speed)
         form.addRow("Homed", self.homing_state)
-        form.addRow("Drawbar", self.drawbar_state)
+        form.addRow("PDB Extend", self.drawbar_state)
+        form.addRow("Lockout", self.lockout_state)
 
-        self.drawbar_button = QPushButton("Power Drawbar: Retracted")
+        self.drawbar_button = QPushButton("Power Drawbar Extend: Retracted")
         self.drawbar_button.setCheckable(True)
         self.drawbar_button.toggled.connect(self._toggle_drawbar)
         layout.addWidget(self.drawbar_button)
@@ -91,7 +93,8 @@ class UserTab(QWidget):
             self._set_status(self.spindle_speed, "-", None)
             self._set_status(self.homing_state, "-", None)
             self._set_status(self.drawbar_state, "-", None)
-            self._set_drawbar_button_state(None)
+            self._set_status(self.lockout_state, "-", None)
+            self._set_drawbar_button_state(None, None)
             return
 
         task_state = getattr(self._stat, "task_state", None)
@@ -106,9 +109,17 @@ class UserTab(QWidget):
         if spindle_list:
             spindle = spindle_list[0] or {}
 
-        spindle_enabled = bool(spindle.get("enabled", False))
+        spindle_commanded = bool(spindle.get("enabled", False))
+        spindle_enabled = self._get_spindle_enabled_state()
+        if spindle_enabled is None:
+            spindle_enabled = spindle_commanded
         spindle_direction = spindle.get("direction", 0)
-        if not spindle_enabled:
+        if drawbar_active := self._get_drawbar_state():
+            if spindle_commanded and not spindle_enabled:
+                spindle_text = "BLOCKED"
+            else:
+                spindle_text = "STOPPED"
+        elif not spindle_enabled:
             spindle_text = "STOPPED"
         elif spindle_direction > 0:
             spindle_text = "FORWARD"
@@ -116,7 +127,7 @@ class UserTab(QWidget):
             spindle_text = "REVERSE"
         else:
             spindle_text = "ON"
-        self._set_status(self.spindle_state, spindle_text, spindle_enabled)
+        self._set_status(self.spindle_state, spindle_text, spindle_enabled and spindle_text != "BLOCKED")
 
         speed = spindle.get("speed", 0.0)
         try:
@@ -143,14 +154,29 @@ class UserTab(QWidget):
         else:
             self._set_status(self.homing_state, "UNKNOWN", None)
 
-        drawbar_active = self._get_drawbar_state()
+        drawbar_locked_out = spindle_enabled
+
+        manual_drawbar_request = self._get_manual_drawbar_request()
+        if drawbar_locked_out and manual_drawbar_request:
+            self._set_manual_drawbar_request(False)
+            manual_drawbar_request = False
+
+        if drawbar_active is None:
+            self._set_status(self.lockout_state, "UNKNOWN", None)
+        elif drawbar_active:
+            self._set_status(self.lockout_state, "SPINDLE LOCKED", False)
+        elif drawbar_locked_out:
+            self._set_status(self.lockout_state, "PDB LOCKED", False)
+        else:
+            self._set_status(self.lockout_state, "READY", True)
+
         if drawbar_active is None:
             self._set_status(self.drawbar_state, "UNKNOWN", None)
         elif drawbar_active:
-            self._set_status(self.drawbar_state, "PUSHED", False)
+            self._set_status(self.drawbar_state, "EXTENDED", False)
         else:
             self._set_status(self.drawbar_state, "RETRACTED", True)
-        self._set_drawbar_button_state(drawbar_active)
+        self._set_drawbar_button_state(manual_drawbar_request, drawbar_locked_out)
 
     def _halcmd(self, *args):
         try:
@@ -174,27 +200,64 @@ class UserTab(QWidget):
             return False
         return None
 
-    def _set_drawbar_button_state(self, active):
-        if active is None:
-            text = "Power Drawbar: Unknown"
+    def _get_manual_drawbar_request(self):
+        return self._get_hal_bool("drawbar-manual-request-pin")
+
+    def _get_spindle_enabled_state(self):
+        return self._get_hal_bool("spindle-enable-allowed-pin")
+
+    def _get_hal_bool(self, pin_name):
+        result = self._halcmd("getp", pin_name)
+        if result is None:
+            return None
+        value = result.stdout.strip().lower()
+        if value in {"1", "true"}:
+            return True
+        if value in {"0", "false"}:
+            return False
+        return None
+
+    def _set_manual_drawbar_request(self, active):
+        return self._halcmd("setp", "drawbar-manual-request-pin", "TRUE" if active else "FALSE")
+
+    def _set_drawbar_button_state(self, active, locked_out):
+        if locked_out:
+            text = "Power Drawbar Extend: Locked Out"
+        elif active is None:
+            text = "Power Drawbar Extend: Unknown"
         elif active:
-            text = "Power Drawbar: Pushed"
+            text = "Power Drawbar Extend: Extended"
         else:
-            text = "Power Drawbar: Retracted"
+            text = "Power Drawbar Extend: Retracted"
         blocker = QSignalBlocker(self.drawbar_button)
         self.drawbar_button.setChecked(bool(active))
         self.drawbar_button.setText(text)
+        self.drawbar_button.setEnabled(active is not None and not locked_out)
         del blocker
 
     def _toggle_drawbar(self, active):
-        result = self._halcmd("setp", "drawbar-out", "TRUE" if active else "FALSE")
-        if result is None:
+        try:
+            self._stat.poll()
+        except Exception:
             self._set_status(self.drawbar_state, "ERROR", False)
-            self._set_drawbar_button_state(self._get_drawbar_state())
+            self._set_drawbar_button_state(self._get_manual_drawbar_request(), None)
             return
 
-        if active:
-            self._set_status(self.drawbar_state, "PUSHED", False)
-        else:
-            self._set_status(self.drawbar_state, "RETRACTED", True)
-        self._set_drawbar_button_state(active)
+        spindle_list = getattr(self._stat, "spindle", None)
+        spindle = spindle_list[0] if spindle_list else {}
+        spindle_enabled = self._get_spindle_enabled_state()
+        if spindle_enabled is None:
+            spindle_enabled = bool(spindle.get("enabled", False))
+        if spindle_enabled:
+            self._set_manual_drawbar_request(False)
+            self._set_status(self.lockout_state, "PDB LOCKED", False)
+            self._set_drawbar_button_state(False, True)
+            return
+
+        result = self._set_manual_drawbar_request(active)
+        if result is None:
+            self._set_status(self.drawbar_state, "ERROR", False)
+            self._set_drawbar_button_state(self._get_manual_drawbar_request(), spindle_enabled)
+            return
+
+        self._set_drawbar_button_state(active, False)
