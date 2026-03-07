@@ -403,7 +403,7 @@ net spindle-off <= spindle-off-pin => drawbar-interlock.in1
 net drawbar-extended <= drawbar-allowed-pin => drawbar-out
 net drawbar-extended => drawbar-not-extended.in
 net drawbar-extended => motion.feed-inhibit
-net drawbar-extended => motion.spindle-inhibit
+net drawbar-extended => spindle.0.inhibit
 
 # Manual tool change
 net tool-change-request    <= iocontrol.0.tool-change
