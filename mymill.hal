@@ -9,7 +9,7 @@ setp    hm2_7i76e.0.watchdog.timeout_ns 5000000
 loadrt pid names=pid.x,pid.y,pid.z,pid.a
 loadrt or2 names=drawbar-request
 loadrt and2 names=drawbar-interlock,spindle-interlock
-loadrt not names=spindle-not-on,drawbar-not-extended
+loadrt not count=3
 
 addf hm2_7i76e.0.read          servo-thread
 addf motion-command-handler   servo-thread
@@ -21,8 +21,8 @@ addf pid.a.do-pid-calcs       servo-thread
 addf drawbar-request          servo-thread
 addf drawbar-interlock        servo-thread
 addf spindle-interlock        servo-thread
-addf spindle-not-on           servo-thread
-addf drawbar-not-extended     servo-thread
+addf not.1                    servo-thread
+addf not.2                    servo-thread
 addf hm2_7i76e.0.write         servo-thread
 setp hm2_7i76e.0.dpll.01.timer-us -50
 setp hm2_7i76e.0.stepgen.timer-number 1
@@ -281,7 +281,7 @@ net spindle-vel-cmd-rpm-abs    <=  spindle.0.speed-out-abs
 net spindle-request            <=  spindle.0.on
 net spindle-forward-select     <=  spindle.0.forward
 net spindle-request            =>  spindle-interlock.in0
-net spindle-start-allowed      <=  drawbar-not-extended.out
+net spindle-start-allowed      <=  drawbar-not-extended-pin
 net spindle-start-allowed      =>  spindle-interlock.in1
 net spindle-enable             <=  spindle-interlock.out
 net spindle-enable             =>  spindle.0.at-speed
@@ -384,9 +384,12 @@ alias pin hm2_7i76e.0.7i76.0.0.output-09 drawbar-out
 alias pin drawbar-request.in0 drawbar-manual-request-pin
 alias pin drawbar-request.out drawbar-requested-pin
 alias pin drawbar-interlock.out drawbar-allowed-pin
-alias pin spindle-not-on.out spindle-off-pin
+alias pin not.1.out spindle-off-pin
+alias pin not.1.in spindle-not-on-pin
 alias pin spindle-interlock.in0 spindle-request-pin
 alias pin spindle-interlock.out spindle-enable-allowed-pin
+alias pin not.2.out drawbar-not-extended-pin
+alias pin not.2.in drawbar-extended-pin
 setp drawbar-manual-request-pin FALSE
 
 # Coolant
@@ -398,10 +401,10 @@ net coolant-mist => mist-out
 # If the drawbar is extended, inhibit both feed motion and spindle motion.
 net drawbar-mcode-request <= motion.digital-out-02 => drawbar-request.in1
 net drawbar-requested <= drawbar-requested-pin => drawbar-interlock.in0
-net spindle-enable => spindle-not-on.in
+net spindle-enable => spindle-not-on-pin
 net spindle-off <= spindle-off-pin => drawbar-interlock.in1
 net drawbar-extended <= drawbar-allowed-pin => drawbar-out
-net drawbar-extended => drawbar-not-extended.in
+net drawbar-extended => drawbar-extended-pin
 net drawbar-extended => motion.feed-inhibit
 net drawbar-extended => spindle.0.inhibit
 

@@ -1,5 +1,4 @@
 loadrt time
-loadrt not
 
 addf time.0 servo-thread
 addf not.0 servo-thread
