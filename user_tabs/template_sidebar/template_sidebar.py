@@ -164,7 +164,7 @@ class UserTab(QWidget):
         if drawbar_active is None:
             self._set_status(self.lockout_state, "UNKNOWN", None)
         elif drawbar_active:
-            self._set_status(self.lockout_state, "SPINDLE LOCKED", False)
+            self._set_status(self.lockout_state, "FEED+SPINDLE LOCKED", False)
         elif drawbar_locked_out:
             self._set_status(self.lockout_state, "PDB LOCKED", False)
         else:
