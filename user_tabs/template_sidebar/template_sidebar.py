@@ -52,6 +52,7 @@ class UserTab(QWidget):
         self.spindle_speed = QLabel("-")
         self.homing_state = QLabel("-")
         self.drawbar_state = QLabel("-")
+        self.blast_state = QLabel("-")
         self.lockout_state = QLabel("-")
 
         form.addRow("Machine", self.machine_state)
@@ -60,12 +61,18 @@ class UserTab(QWidget):
         form.addRow("Speed", self.spindle_speed)
         form.addRow("Homed", self.homing_state)
         form.addRow("PDB Extend", self.drawbar_state)
+        form.addRow("TS Blast", self.blast_state)
         form.addRow("Lockout", self.lockout_state)
 
         self.drawbar_button = QPushButton("Power Drawbar Extend: Retracted")
         self.drawbar_button.setCheckable(True)
         self.drawbar_button.toggled.connect(self._toggle_drawbar)
         layout.addWidget(self.drawbar_button)
+
+        self.blast_button = QPushButton("Touchsetter Blast: Off")
+        self.blast_button.setCheckable(True)
+        self.blast_button.toggled.connect(self._toggle_blast)
+        layout.addWidget(self.blast_button)
 
         layout.addStretch(1)
 
@@ -93,8 +100,10 @@ class UserTab(QWidget):
             self._set_status(self.spindle_speed, "-", None)
             self._set_status(self.homing_state, "-", None)
             self._set_status(self.drawbar_state, "-", None)
+            self._set_status(self.blast_state, "-", None)
             self._set_status(self.lockout_state, "-", None)
             self._set_drawbar_button_state(None, None)
+            self._set_blast_button_state(None)
             return
 
         task_state = getattr(self._stat, "task_state", None)
@@ -178,6 +187,15 @@ class UserTab(QWidget):
             self._set_status(self.drawbar_state, "RETRACTED", True)
         self._set_drawbar_button_state(manual_drawbar_request, drawbar_locked_out)
 
+        blast_active = self._get_touchsetter_blast_state()
+        if blast_active is None:
+            self._set_status(self.blast_state, "UNKNOWN", None)
+        elif blast_active:
+            self._set_status(self.blast_state, "ON", False)
+        else:
+            self._set_status(self.blast_state, "OFF", True)
+        self._set_blast_button_state(self._get_manual_touchsetter_blast_request())
+
     def _halcmd(self, *args):
         try:
             return subprocess.run(
@@ -206,6 +224,12 @@ class UserTab(QWidget):
     def _get_spindle_enabled_state(self):
         return self._get_hal_bool("spindle-enable-allowed-pin")
 
+    def _get_touchsetter_blast_state(self):
+        return self._get_hal_bool("touch-probe-air-out")
+
+    def _get_manual_touchsetter_blast_request(self):
+        return self._get_hal_bool("touchsetter-blast-manual-request-pin")
+
     def _get_hal_bool(self, pin_name):
         result = self._halcmd("getp", pin_name)
         if result is None:
@@ -220,6 +244,9 @@ class UserTab(QWidget):
     def _set_manual_drawbar_request(self, active):
         return self._halcmd("setp", "drawbar-manual-request-pin", "TRUE" if active else "FALSE")
 
+    def _set_manual_touchsetter_blast_request(self, active):
+        return self._halcmd("setp", "touchsetter-blast-manual-request-pin", "TRUE" if active else "FALSE")
+
     def _set_drawbar_button_state(self, active, locked_out):
         if locked_out:
             text = "Power Drawbar Extend: Locked Out"
@@ -233,6 +260,19 @@ class UserTab(QWidget):
         self.drawbar_button.setChecked(bool(active))
         self.drawbar_button.setText(text)
         self.drawbar_button.setEnabled(active is not None and not locked_out)
+        del blocker
+
+    def _set_blast_button_state(self, active):
+        if active is None:
+            text = "Touchsetter Blast: Unknown"
+        elif active:
+            text = "Touchsetter Blast: On"
+        else:
+            text = "Touchsetter Blast: Off"
+        blocker = QSignalBlocker(self.blast_button)
+        self.blast_button.setChecked(bool(active))
+        self.blast_button.setText(text)
+        self.blast_button.setEnabled(active is not None)
         del blocker
 
     def _toggle_drawbar(self, active):
@@ -261,3 +301,12 @@ class UserTab(QWidget):
             return
 
         self._set_drawbar_button_state(active, False)
+
+    def _toggle_blast(self, active):
+        result = self._set_manual_touchsetter_blast_request(active)
+        if result is None:
+            self._set_status(self.blast_state, "ERROR", False)
+            self._set_blast_button_state(self._get_manual_touchsetter_blast_request())
+            return
+
+        self._set_blast_button_state(active)

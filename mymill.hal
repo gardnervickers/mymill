@@ -7,7 +7,7 @@ loadrt hostmot2
 loadrt hm2_eth board_ip="10.10.10.10" config="num_encoders=1 num_pwmgens=0 num_stepgens=5 sserial_port_0=2xxxxxx" 
 setp    hm2_7i76e.0.watchdog.timeout_ns 5000000
 loadrt pid names=pid.x,pid.y,pid.z,pid.a
-loadrt or2 names=drawbar-request
+loadrt or2 names=drawbar-request,touchsetter-blast-request
 loadrt and2 names=drawbar-interlock,spindle-interlock
 loadrt not count=3
 
@@ -19,6 +19,7 @@ addf pid.y.do-pid-calcs       servo-thread
 addf pid.z.do-pid-calcs       servo-thread
 addf pid.a.do-pid-calcs       servo-thread
 addf drawbar-request          servo-thread
+addf touchsetter-blast-request servo-thread
 addf drawbar-interlock        servo-thread
 addf spindle-interlock        servo-thread
 addf not.1                    servo-thread
@@ -378,6 +379,9 @@ net estop-latch-enable-machine estop-latch.0.ok-out => iocontrol.0.emc-enable-in
 
 # Probe air blast
 alias pin hm2_7i76e.0.7i76.0.0.output-08 touch-probe-air-out
+alias pin touchsetter-blast-request.in0 touchsetter-blast-manual-request-pin
+alias pin touchsetter-blast-request.out touchsetter-blast-requested-pin
+setp touchsetter-blast-manual-request-pin FALSE
 
 # Drawbar
 alias pin hm2_7i76e.0.7i76.0.0.output-09 drawbar-out
@@ -399,6 +403,7 @@ net coolant-mist => mist-out
 # Drawbar interlock
 # The drawbar may only energize when the spindle is off.
 # If the drawbar is extended, inhibit spindle motion.
+net touchsetter-blast-active <= touchsetter-blast-requested-pin => touch-probe-air-out
 net drawbar-mcode-request <= motion.digital-out-02 => drawbar-request.in1
 net drawbar-requested <= drawbar-requested-pin => drawbar-interlock.in0
 net spindle-enable => spindle-not-on-pin
