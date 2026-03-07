@@ -1,7 +1,9 @@
+import subprocess
+
 import linuxcnc
 
-from qtpy.QtCore import QTimer, Qt
-from qtpy.QtWidgets import QFormLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from qtpy.QtCore import QSignalBlocker, QTimer, Qt
+from qtpy.QtWidgets import QFormLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 
 STATE_LABELS = {
@@ -21,6 +23,7 @@ MODE_LABELS = {
 class UserTab(QWidget):
     def __init__(self, parent=None):
         super(UserTab, self).__init__(parent)
+        self.setObjectName("STATUS")
         self.setProperty("sidebar", True)
         self.setWindowTitle("Machine Status")
         self.setMinimumWidth(180)
@@ -48,12 +51,19 @@ class UserTab(QWidget):
         self.spindle_state = QLabel("-")
         self.spindle_speed = QLabel("-")
         self.homing_state = QLabel("-")
+        self.drawbar_state = QLabel("-")
 
         form.addRow("Machine", self.machine_state)
         form.addRow("Mode", self.mode_state)
         form.addRow("Spindle", self.spindle_state)
         form.addRow("Speed", self.spindle_speed)
         form.addRow("Homed", self.homing_state)
+        form.addRow("Drawbar", self.drawbar_state)
+
+        self.drawbar_button = QPushButton("Power Drawbar: Retracted")
+        self.drawbar_button.setCheckable(True)
+        self.drawbar_button.toggled.connect(self._toggle_drawbar)
+        layout.addWidget(self.drawbar_button)
 
         layout.addStretch(1)
 
@@ -80,6 +90,8 @@ class UserTab(QWidget):
             self._set_status(self.spindle_state, "-", None)
             self._set_status(self.spindle_speed, "-", None)
             self._set_status(self.homing_state, "-", None)
+            self._set_status(self.drawbar_state, "-", None)
+            self._set_drawbar_button_state(None)
             return
 
         task_state = getattr(self._stat, "task_state", None)
@@ -130,3 +142,59 @@ class UserTab(QWidget):
             self._set_status(self.homing_state, homed_text, homed_count == len(joint_homed))
         else:
             self._set_status(self.homing_state, "UNKNOWN", None)
+
+        drawbar_active = self._get_drawbar_state()
+        if drawbar_active is None:
+            self._set_status(self.drawbar_state, "UNKNOWN", None)
+        elif drawbar_active:
+            self._set_status(self.drawbar_state, "PUSHED", False)
+        else:
+            self._set_status(self.drawbar_state, "RETRACTED", True)
+        self._set_drawbar_button_state(drawbar_active)
+
+    def _halcmd(self, *args):
+        try:
+            return subprocess.run(
+                ["halcmd", *args],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except Exception:
+            return None
+
+    def _get_drawbar_state(self):
+        result = self._halcmd("getp", "drawbar-out")
+        if result is None:
+            return None
+        value = result.stdout.strip().lower()
+        if value in {"1", "true"}:
+            return True
+        if value in {"0", "false"}:
+            return False
+        return None
+
+    def _set_drawbar_button_state(self, active):
+        if active is None:
+            text = "Power Drawbar: Unknown"
+        elif active:
+            text = "Power Drawbar: Pushed"
+        else:
+            text = "Power Drawbar: Retracted"
+        blocker = QSignalBlocker(self.drawbar_button)
+        self.drawbar_button.setChecked(bool(active))
+        self.drawbar_button.setText(text)
+        del blocker
+
+    def _toggle_drawbar(self, active):
+        result = self._halcmd("setp", "drawbar-out", "TRUE" if active else "FALSE")
+        if result is None:
+            self._set_status(self.drawbar_state, "ERROR", False)
+            self._set_drawbar_button_state(self._get_drawbar_state())
+            return
+
+        if active:
+            self._set_status(self.drawbar_state, "PUSHED", False)
+        else:
+            self._set_status(self.drawbar_state, "RETRACTED", True)
+        self._set_drawbar_button_state(active)
