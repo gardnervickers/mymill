@@ -398,14 +398,13 @@ net coolant-mist => mist-out
 
 # Drawbar interlock
 # The drawbar may only energize when the spindle is off.
-# If the drawbar is extended, inhibit both feed motion and spindle motion.
+# If the drawbar is extended, inhibit spindle motion.
 net drawbar-mcode-request <= motion.digital-out-02 => drawbar-request.in1
 net drawbar-requested <= drawbar-requested-pin => drawbar-interlock.in0
 net spindle-enable => spindle-not-on-pin
 net spindle-off <= spindle-off-pin => drawbar-interlock.in1
 net drawbar-extended <= drawbar-allowed-pin => drawbar-out
 net drawbar-extended => drawbar-extended-pin
-net drawbar-extended => motion.feed-inhibit
 net drawbar-extended => spindle.0.inhibit
 
 # Manual tool change
