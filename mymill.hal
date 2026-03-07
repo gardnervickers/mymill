@@ -364,13 +364,15 @@ net estop-ui-request-enable iocontrol.0.user-request-enable => estop-latch.0.res
 net estop-ui-is-enabled iocontrol.0.user-enable-out => estop-latch.0.ok-in
 net estop-latch-enable-machine estop-latch.0.ok-out => iocontrol.0.emc-enable-in
 
+# Probe air blast
+alias pin hm2_7i76e.0.7i76.0.0.output-08 touch-probe-air-out
+
+# Drawbar
+alias pin hm2_7i76e.0.7i76.0.0.output-09 drawbar-out
+
 # Coolant
-
-alias pin hm2_7i76e.0.7i76.0.0.output-05 mist-out
+alias pin hm2_7i76e.0.7i76.0.0.output-10 mist-out
 net coolant-mist => mist-out
-
-# Drawbar 
-alias pin hm2_7i76e.0.7i76.0.0.output-04 drawbar-out
 
 # Manual tool change
 net tool-change-request    <= iocontrol.0.tool-change
